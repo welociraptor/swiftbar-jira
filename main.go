@@ -54,14 +54,18 @@ type Response struct {
 	}
 }
 
+func closeBody(body io.ReadCloser) {
+	err := body.Close()
+	if err != nil {
+		fmt.Println(err)
+	}
+}
+
 func DoRequest(r *http.Request) (*Response, error) {
 	c := &http.Client{}
 
 	resp, err := c.Do(r)
-
-	defer func() {
-		_ = resp.Body.Close()
-	}()
+	defer closeBody(resp.Body)
 	if err != nil {
 		return nil, err
 	}
