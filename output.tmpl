@@ -1,5 +1,8 @@
 JIRA
+{{- range . }}
 ---
+**{{ .Header }}** | md=True
 {{- range .Issues }}
 {{ .Fields.Summary }} | href="https://jira.sok.fi/browse/{{ .Key }}"
+{{- end }}
 {{- end }}

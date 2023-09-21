@@ -4,6 +4,6 @@
 # <bitbar.abouturl>https://github.com/welociraptor/swiftbar-jira</bitbar.abouturl>
 # <swiftbar.hideAbout>true</swiftbar.hideAbout>
 # <swiftbar.hideRunInTerminal>true</swiftbar.hideRunInTerminal>
-# <swiftbar.hideLastUpdated>true</swiftbar.hideLastUpdated>
+# <swiftbar.hideLastUpdated>false</swiftbar.hideLastUpdated>
 # <swiftbar.hideDisablePlugin>true</swiftbar.hideDisablePlugin>
-# <swiftbar.hideSwiftBar>true</swiftbar.hideSwiftBar>
+# <swiftbar.hideSwiftBar>false</swiftbar.hideSwiftBar>

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"embed"
 	"encoding/json"
 	"fmt"
@@ -9,43 +8,31 @@ import (
 	"net/http"
 	"os"
 	"text/template"
+
+	"github.com/welociraptor/swiftbar-jira/config"
+	"github.com/welociraptor/swiftbar-jira/jira"
 )
 
 var (
 	//go:embed output.tmpl
-	files     embed.FS
-	JiraUrl   string
-	JiraToken string
+	files embed.FS
 )
 
 func main() {
-	if JiraUrl == "" {
-		JiraUrl = os.Getenv("JIRA_URL")
-	}
+	configuration := config.Load()
 
-	if JiraToken == "" {
-		JiraToken = os.Getenv("JIRA_TOKEN")
-	}
-
-	req, _ := http.NewRequest(http.MethodPost, JiraUrl, Query())
-
-	req.Header.Add("Authorization", fmt.Sprintf("Bearer %v", JiraToken))
-	req.Header.Add("Content-Type", "application/json")
-
-	jiraResp, err := DoRequest(req)
-	if err != nil {
-		panic(err)
-	}
+	responses := ExecuteQueries(configuration)
 
 	tmpl, err := template.New("output.tmpl").ParseFS(files, "output.tmpl")
 	if err != nil {
 		panic(err)
 	}
 
-	tmpl.Execute(os.Stdout, jiraResp)
+	tmpl.Execute(os.Stdout, responses)
 }
 
 type Response struct {
+	Header string
 	Issues []struct {
 		Key    string
 		Fields struct {
@@ -61,40 +48,51 @@ func closeBody(body io.ReadCloser) {
 	}
 }
 
-func DoRequest(r *http.Request) (*Response, error) {
+func ExecuteQueries(c *config.Configuration) []Response {
+	responseCh := make(chan Response, 1)
+
+	responses := make([]Response, len(c.Queries))
+
+	for _, query := range c.Queries {
+		go executeQuery(query, c.JiraUrl, c.JiraToken, responseCh)
+	}
+
+	for i, _ := range c.Queries {
+		responses[i] = <-responseCh
+	}
+
+	return responses
+}
+
+func executeQuery(q jira.Query, jiraUrl, jiraToken string, ch chan<- Response) {
+	req, _ := http.NewRequest(http.MethodPost, jiraUrl, q.GetBuffer())
+
+	req.Header.Add("Authorization", fmt.Sprintf("Bearer %v", jiraToken))
+	req.Header.Add("Content-Type", "application/json")
+
 	c := &http.Client{}
 
-	resp, err := c.Do(r)
-	defer closeBody(resp.Body)
+	resp, err := c.Do(req)
 	if err != nil {
-		return nil, err
+		fmt.Println(err)
+		os.Exit(1)
 	}
+	defer closeBody(resp.Body)
 
 	resb, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, err
+		fmt.Println(err)
+		os.Exit(1)
 	}
 
-	var jiraResp Response
+	jiraResp := Response{}
+	jiraResp.Header = q.Header
 
 	err = json.Unmarshal(resb, &jiraResp)
-
-	return &jiraResp, err
-}
-
-func Query() *bytes.Buffer {
-	query := map[string]interface{}{
-		"jql": "labels = SRE ORDER BY created DESC",
-		/*		"startAt":    0,
-				"maxResults": 25, */
-		"fields": []string{
-			"summary", "status",
-		},
-	}
-
-	b, err := json.Marshal(query)
 	if err != nil {
-		panic(err)
+		fmt.Println(err)
+		os.Exit(1)
 	}
-	return bytes.NewBuffer(b)
+
+	ch <- jiraResp
 }

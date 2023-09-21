@@ -1,0 +1,7 @@
+jiraUrl: [JIRA_HOST_HERE]
+jiraToken: [JIRA_PERSONAL_ACCESS_TOKEN]
+queries:
+  - header: "Assigned to me"
+    jql: "assignee = currentUser() AND resolution = 'Unresolved' ORDER BY created ASC"
+  - header: "SRE backlog"
+    jql: "labels = 'SRE' ORDER BY created DESC"
