@@ -1,0 +1,5 @@
+JIRA
+---
+{{- range .Issues }}
+{{ .Fields.Summary }} | href="https://jira.sok.fi/browse/{{ .Key }}"
+{{- end }}
