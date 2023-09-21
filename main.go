@@ -63,12 +63,12 @@ func DoRequest(c *http.Client, r *http.Request) (*Response, error) {
 		_ = resp.Body.Close()
 	}()
 	if err != nil {
-		fmt.Println(err)
+		return nil, err
 	}
 
 	resb, err := io.ReadAll(resp.Body)
 	if err != nil {
-		fmt.Println(err)
+		return nil, err
 	}
 
 	var jiraResp Response
