@@ -32,9 +32,7 @@ func main() {
 	req.Header.Add("Authorization", fmt.Sprintf("Bearer %v", JiraToken))
 	req.Header.Add("Content-Type", "application/json")
 
-	c := &http.Client{}
-
-	jiraResp, err := DoRequest(c, req)
+	jiraResp, err := DoRequest(req)
 	if err != nil {
 		panic(err)
 	}
@@ -56,7 +54,9 @@ type Response struct {
 	}
 }
 
-func DoRequest(c *http.Client, r *http.Request) (*Response, error) {
+func DoRequest(r *http.Request) (*Response, error) {
+	c := &http.Client{}
+
 	resp, err := c.Do(r)
 
 	defer func() {
