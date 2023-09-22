@@ -49,7 +49,7 @@ func closeBody(body io.ReadCloser) {
 }
 
 func ExecuteQueries(c *config.Configuration) []Response {
-	responseCh := make(chan Response, 1)
+	responseCh := make(chan Response, len(c.Queries))
 
 	responses := make([]Response, len(c.Queries))
 
